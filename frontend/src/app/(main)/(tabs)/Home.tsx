@@ -1,4 +1,4 @@
-// @ts-nocheck
+//@ts-nocheck
 import {
   View,
   Text,
@@ -12,83 +12,97 @@ import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import IssueCard from "@/src/components/IssueCard";
 import IssueCard2 from "@/src/components/IssueCard2";
-
+import axios from "axios";
+import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";
+import { useSelector, useDispatch } from "react-redux";
+import { setLocalIssues, setUserIssues } from "@/src/redux/store";
 
-const home = () => {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+const Home = () => {
   const router = useRouter();
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const dispatch = useDispatch();
+
+  const localIssue = useSelector((state) => state.issues.localIssues);
+  const userIssue = useSelector((state) => state.issues.userIssues);
+
   const [location, setLocation] = useState(null);
-  // eslint-disable-next-line react-hooks/rules-of-hooks
 
-  // useEffect(() => {
-  //   (async () => {
-  //     let { status } = await Location.requestForegroundPermissionsAsync();
-  //     if (status !== "granted") {
-  //       console.log("Permission to access location was denied");
-  //       return;
-  //     }
+  const sendLocationToBackend = async (location) => {
+    const token = await SecureStore.getItemAsync("access_token");
+    if (!token) return;
 
-  //     let currentLocation = await Location.getCurrentPositionAsync({});
-  //     setLocation({
-  //       latitude: currentLocation.coords.latitude,
-  //       longitude: currentLocation.coords.longitude,
-  //     });
-  //   })();
-  // }, []);
+    const residentLocationPayload = {
+      location: {
+        type: "Point",
+        coordinates: [location.longitude, location.latitude],
+      },
+    };
 
-  const tempData = [
-    {
-      title: "pothole in main street",
-      description:
-        "If you have already registered a project for another Google service on Android, such as Google Sign In, you enable the Maps SDK for Android on your project and jump to step 4",
-      date: "30-09-2025",
-      time: "9:40",
-      vote: 10,
-    },
-    {
-      title: "pothole in main street",
-      description:
-        "If you have already registered a project for another Google service on Android, such as Google Sign In, you enable the Maps SDK for Android on your project and jump to step 4",
-      date: "30-09-2025",
-      time: "9:40",
-      vote: 10,
-    },
-    {
-      title: "pothole in main street",
-      description:
-        "If you have already registered a project for another Google service on Android, such as Google Sign In, you enable the Maps SDK for Android on your project and jump to step 4",
-      date: "30-09-2025",
-      time: "9:40",
-      vote: 10,
-    },
-    {
-      title: "pothole in main street",
-      description:
-        "If you have already registered a project for another Google service on Android, such as Google Sign In, you enable the Maps SDK for Android on your project and jump to step 4",
-      date: "30-09-2025",
-      time: "9:40",
-      vote: 10,
-    },
-    {
-      title: "pothole in main street",
-      description:
-        "If you have already registered a project for another Google service on Android, such as Google Sign In, you enable the Maps SDK for Android on your project and jump to step 4",
-      date: "30-09-2025",
-      time: "9:40",
-      vote: 10,
-    },
-  ];
+    await axios.put(
+      `${process.env.EXPO_PUBLIC_BACKEND_API}/api/resident/updateLocation`,
+      residentLocationPayload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  };
+
+  const fetchIssues = async () => {
+    try {
+      const token = await SecureStore.getItemAsync("access_token");
+      if (!token) return;
+
+      const localIssueRes = await axios.get(
+        `${process.env.EXPO_PUBLIC_BACKEND_API}/api/issue/getIssue`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      dispatch(setLocalIssues(localIssueRes.data));
+
+      const userIssueRes = await axios.get(
+        `${process.env.EXPO_PUBLIC_BACKEND_API}/api/issue/getUserIssue`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      dispatch(setUserIssues(userIssueRes.data));
+    } catch (error) {
+      console.error("Error fetching issues:", error);
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          console.log("Permission to access location was denied");
+          return;
+        }
+
+        let currentLocation = await Location.getCurrentPositionAsync({});
+        const loc = {
+          longitude: currentLocation.coords.longitude,
+          latitude: currentLocation.coords.latitude,
+        };
+        setLocation(loc);
+
+        await sendLocationToBackend(loc);
+        await fetchIssues();
+      } catch (error) {
+        console.error("Error getting location or fetching issues:", error);
+      }
+    })();
+  },[]);
+
   return (
     <CustomSafeArea edge={["left", "right"]}>
       <View style={styles.main}>
+        {/* Map Section */}
         <View style={styles.mapSection}>
           {!location ? (
-            <View>
-              <Text style={{ fontSize: 20, fontWeight: 600 }}>
-                Loading......
-              </Text>
+            <View style={styles.loadingBox}>
+              <Text style={styles.loadingText}>Loading...</Text>
             </View>
           ) : (
             <MapView
@@ -96,56 +110,46 @@ const home = () => {
               initialRegion={{
                 latitude: location.latitude,
                 longitude: location.longitude,
-                latitudeDelta: 0.05,
-                longitudeDelta: 0.05,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
               }}
             >
               <Marker coordinate={location} title="You are here" />
             </MapView>
           )}
         </View>
+
+        {/* Main Content */}
         <View style={styles.mainSection}>
           <TouchableOpacity
             style={styles.newIssueBtn}
-            onPress={() => {
-              router.push("/Report");
-            }}
+            onPress={() => router.push("/Report")}
           >
-            <Text style={{ fontSize: 20, fontWeight: 500 }}>
-              Submit a new Issue
-            </Text>
+            <Text style={styles.newIssueText}>+ Submit a New Issue</Text>
           </TouchableOpacity>
+
           <View style={styles.section1}>
-            <Text style={{ fontSize: 20, fontWeight: 800,paddingBottom:5, }}>Top 5 Issues</Text>
+            <Text style={styles.sectionTitle}>Top 5 Issues</Text>
             <FlatList
-              data={tempData}
-              contentContainerStyle={{
-                gap: 10,
-              }}
+              data={localIssue}
               horizontal
               showsHorizontalScrollIndicator={false}
-              renderItem={({ item }) => (
-                <IssueCard
-                  title={item.title}
-                  date={item.date}
-                  vote={item.vote}
-                />
-              )}
+              contentContainerStyle={{ gap: 10 ,padding:10}}
+              renderItem={({ item }) => <IssueCard issueData={item} />}
             />
           </View>
+
           <View style={styles.section2}>
-              <Text style={{fontSize: 20, fontWeight: 800}}>My Issues</Text>
-              <FlatList
+            <Text style={styles.sectionTitle}>My Issues</Text>
+            <View style={{alignItems:"center"}}>
+                <FlatList
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{
-                gap: 5,
-                alignItems:'center'
-              }}
-                data={tempData}
-                renderItem={({item})=>(
-                  <IssueCard2 title={item.title} desc={item.description} date={item.date}/>
-  )}
-              />
+              contentContainerStyle={styles.listContainer}
+              data={userIssue}
+              renderItem={({ item }) => <IssueCard2 issueData={item} />}
+            />
+            </View>
+            
           </View>
         </View>
       </View>
@@ -154,51 +158,41 @@ const home = () => {
 };
 
 const styles = StyleSheet.create({
-  main: {
-    flex: 1,
-  },
-  mapSection: {
-    height: "35%",
-    width: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1,
-  },
-  map: {
-    flex: 1,
-    width: "100%",
-  },
+  main: { flex: 1, backgroundColor: "#f6f9fc" },
+  mapSection: { height: "35%", width: "100%", justifyContent: "center", alignItems: "center", zIndex: 1 },
+  loadingBox: { alignItems: "center", justifyContent: "center", height: "100%" },
+  loadingText: { fontSize: 18, fontWeight: "600", color: "#555" },
+  map: { flex: 1, width: "100%" },
   mainSection: {
     flex: 1,
     width: "100%",
-    borderTopLeftRadius: 40,
-    borderTopRightRadius: 40,
-    marginTop: -32,
+    borderTopLeftRadius: 35,
+    borderTopRightRadius: 35,
+    marginTop: -30,
     zIndex: 2,
     paddingTop: 20,
-    backgroundColor: "#ffffffff",
-    elevation: 3,
+    backgroundColor: "#fff",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
     alignItems: "center",
-    padding: 5,
-  },
-  section1: {
-    height: "25%",
-    width: "100%",
-    // backgroundColor:'red',
     paddingHorizontal: 10,
-    paddingVertical:5,
   },
   newIssueBtn: {
     backgroundColor: "#0c92cbff",
-    paddingVertical:10,
-    paddingHorizontal:20,
+    paddingVertical: 12,
+    paddingHorizontal: 25,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 10,
+    borderRadius: 12,
+    marginBottom: 15,
   },
-  section2:{
-    flex:1,
-  }
+  newIssueText: { fontSize: 18, fontWeight: "600", color: "#fff" },
+  section1: { width: "100%", marginBottom: 15 ,},
+  section2: { flex: 1, width: "100%" },
+  sectionTitle: { fontSize: 20, fontWeight: "700", color: "#1a1a1a", paddingBottom: 8, paddingLeft: 5 },
+  listContainer: { gap: 10, paddingBottom: 45,paddingHorizontal:5,width:'90%'},
 });
 
-export default home;
+export default Home;

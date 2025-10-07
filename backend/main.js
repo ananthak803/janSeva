@@ -2,7 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import residentAuth from './routes/residentAuth.js';
 import connectDB from "./connectio.js";
-
+import issue from './routes/issue.js'
 
 dotenv.config();
 const app=express();
@@ -19,6 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 const PORT=process.env.PORT;
 
 app.use('/api/resident',residentAuth)
+app.use('/api/issue',issue)
 
 app.get("/",(req,res)=>{
     res.send(`server running on port ${PORT}`);

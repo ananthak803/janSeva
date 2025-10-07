@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import Resident from '../models/resident.js';
 import dotenv from 'dotenv';
-
+import authMiddleware from '../services/checkAuth.js';
 dotenv.config()
 const router = express.Router();
 
@@ -56,6 +56,28 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server error in /login");
+  }
+});
+
+router.put("/updateLocation", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { location } = req.body;
+
+    if (!location?.type || !location?.coordinates) {
+      return res.status(400).json({ msg: "Invalid location format" });
+    }
+
+    const updatedResident = await Resident.findByIdAndUpdate(
+      userId,
+      { location },
+      { new: true }
+    );
+
+    res.json({ msg: "Location updated", resident: updatedResident });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error" });
   }
 });
 

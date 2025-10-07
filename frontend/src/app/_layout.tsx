@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Stack } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { ActivityIndicator, View } from "react-native";
+import { Provider } from "react-redux";
+import store from '../redux/store'; 
 
 const RootLayout = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -27,7 +29,6 @@ const RootLayout = () => {
   }, []);
 
   if (isLoading) {
-    // Show splash/loading while checking token
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" />
@@ -36,13 +37,11 @@ const RootLayout = () => {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      {isLoggedIn ? (
-        <Stack.Screen name="(main)" />
-      ) : (
-        <Stack.Screen name="(auth)" />
-      )}
-    </Stack>
+    <Provider store={store}>
+      <Stack screenOptions={{ headerShown: false }}>
+        {isLoggedIn ? <Stack.Screen name="(main)" /> : <Stack.Screen name="(auth)" />}
+      </Stack>
+    </Provider>
   );
 };
 
