@@ -2,6 +2,7 @@ import express from 'express';
 import Issue from '../models/issue.js'; 
 import authMiddleware from '../services/checkAuth.js'; 
 import Resident from "../models/resident.js";
+import Comment from '../models/comment.js';
 const router = express.Router();
 
 router.post("/newIssue", authMiddleware, async (req, res) => {
@@ -83,6 +84,20 @@ router.get("/getUserIssue", authMiddleware, async (req, res) => {
   }
 });
 
+router.post('/addComment',authMiddleware,async(req,res)=>{
+  try{
+    const {issueId,text,date,time} =req.body;
+    const commentedBy=req.user.id
+    const newComment = new Comment({
+      issueId,
+      text,
+      commentedBy
+    })
+  }
+  catch{
+
+  }
+})
 
 
 export default router;
