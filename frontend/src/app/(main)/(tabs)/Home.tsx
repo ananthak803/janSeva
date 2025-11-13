@@ -17,14 +17,13 @@ import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";
 import { useSelector, useDispatch } from "react-redux";
 import { setLocalIssues, setUserIssues } from "@/src/redux/store";
-
+import LoadingScreen from "@/src/components/LoadingScreen";
 const Home = () => {
   const router = useRouter();
   const dispatch = useDispatch();
-
   const localIssue = useSelector((state) => state.issues.localIssues);
   const userIssue = useSelector((state) => state.issues.userIssues);
-
+  const [loading,setLoading]=useState(true);
   const [location, setLocation] = useState(null);
 
   const sendLocationToBackend = async (location) => {
@@ -89,11 +88,16 @@ const Home = () => {
 
         await sendLocationToBackend(loc);
         await fetchIssues();
+        setLoading(false)
       } catch (error) {
         console.error("Error getting location or fetching issues:", error);
       }
     })();
   },[]);
+
+  if(loading){
+    return <LoadingScreen/>
+  }
 
   return (
     <CustomSafeArea edge={["left", "right"]}>

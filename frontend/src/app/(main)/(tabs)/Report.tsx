@@ -20,6 +20,7 @@ import { setImageUri ,addUserIssue,addLocalIssue} from "@/src/redux/store";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Location from "expo-location";
 import * as SecureStore from "expo-secure-store";
+import LoadingScreen from "@/src/components/LoadingScreen";
 
 const { width, height } = Dimensions.get("window");
 
@@ -28,11 +29,15 @@ const Report = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
+  const [loading,setLoading]=useState(false);
 
   const router = useRouter();
   const dispatch = useDispatch();
   //@ts-ignore
   let imageUri = useSelector((state) => state.cache_img.imageUri);
+
+   
+  
 
   const getCurrentDate = () => {
     const date = new Date();
@@ -53,6 +58,7 @@ const Report = () => {
   };
 
   const handleSubmit = async () => {
+    setLoading(true);
     const cloudUri = await uploadImageToCloudinary(imageUri);
     const currentLocation = await getCurrentLocation();
     const issueData = {
@@ -81,6 +87,7 @@ const Report = () => {
     dispatch(addLocalIssue(response.data));
     clearForm();
     alert("Issue submitted Successfully");
+    setLoading(false);
   };
 
   const uploadImageToCloudinary = async (imageUri) => {
@@ -115,6 +122,10 @@ const Report = () => {
     imageUri = "";
     dispatch(setImageUri(""));
   };
+
+  if(loading){
+    return <LoadingScreen/>
+  }
 
   return (
     <CustomSafeArea edge={["left", "right", "top"]}>

@@ -1,3 +1,4 @@
+//@ts-nocheck
 import {
   View,
   Text,
@@ -6,15 +7,30 @@ import {
   TouchableOpacity,
   Image,
   Linking,
+  Alert,
 } from "react-native";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import CustomSafeArea from "@/src/components/CustomSafeArea";
 import { useSelector } from "react-redux";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import * as SecureStore from "expo-secure-store";
+import axios from "axios";
 
 const Community = () => {
   const localIssue = useSelector((state) => state.issues.localIssues);
+  const [voteCounts, setVoteCounts] = useState({});
+  const [selectedIssue, setSelectedIssue] = useState(null);
+  const [newCommentText, setNewCommentText] = useState("");
+
+
+  useEffect(() => {
+    const counts = {};
+    localIssue.forEach((issue) => {
+      counts[issue._id] = issue.voteCount || 0;
+    });
+    setVoteCounts(counts);
+  }, [localIssue]);
 
   const openLocationInGoogleMaps = (coords, title) => {
     const { latitude, longitude } = coords;
@@ -24,29 +40,54 @@ const Community = () => {
     );
   };
 
+
+  async function sendVote(issueId) {
+    const token = await SecureStore.getItemAsync("access_token");
+    try {
+      const response = await axios.post(
+        `${process.env.EXPO_PUBLIC_BACKEND_API}/api/issue/addVote`,
+        { issueId },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 201) {
+        const newCount = response.data.voteCount;
+        alert("Success", `Vote added! Current votes: ${newCount}`);
+        setVoteCounts((prev) => ({ ...prev, [issueId]: newCount }));
+      } else {
+        alert("Already Voted", response.data.msg || "Vote could not be added");
+      }
+    } catch (error) {
+      console.error("Error sending vote:", error);
+      alert("Error", "Failed to send vote. Please try again.");
+    }
+  }
+
   const renderPost = ({ item }) => (
     <View style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.title}>{item.title}</Text>
         <Text style={styles.time}>{item.time || ""}</Text>
       </View>
-      <Text style={styles.content}>{item.description || item.content || ""}</Text>
+      <Text style={styles.content}>{item.description || ""}</Text>
 
       {item.imageUrl && (
         <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
       )}
 
       <View style={styles.footer}>
-        {/* Comment Icon */}
-        <TouchableOpacity style={styles.iconRow}>
-          <MaterialIcons name="comment" size={24} color="black" />
-          <Text style={styles.iconText}>{item.comments?.length || 0}</Text>
-        </TouchableOpacity>
-
         {/* Vote Icon */}
-        <TouchableOpacity style={styles.iconRow}>
+        <TouchableOpacity
+          style={styles.iconRow}
+          onPress={() => sendVote(item._id)}
+        >
           <MaterialIcons name="thumb-up" size={24} color="black" />
-          <Text style={styles.iconText}>{item.voteCount || 0}</Text>
+          <Text style={styles.iconText}>{voteCounts[item._id] ?? 0}</Text>
         </TouchableOpacity>
 
         {/* Location Icon */}
@@ -55,7 +96,10 @@ const Community = () => {
             style={styles.iconRow}
             onPress={() =>
               openLocationInGoogleMaps(
-                { latitude: item.location.coordinates[1], longitude: item.location.coordinates[0] },
+                {
+                  latitude: item.location.coordinates[1],
+                  longitude: item.location.coordinates[0],
+                },
                 item.title
               )
             }
@@ -67,18 +111,24 @@ const Community = () => {
     </View>
   );
 
+
   return (
     <CustomSafeArea edges={["left", "right"]}>
       <View style={styles.main}>
         <Text style={styles.headerTitle}>Community Feed</Text>
         <FlatList
           data={localIssue}
-          keyExtractor={(item, index) => item._id?.toString() || index.toString()}
+          keyExtractor={(item, index) =>
+            item._id?.toString() || index.toString()
+          }
           renderItem={renderPost}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 80, gap: 10 }}
         />
       </View>
+
+      {/* Comment Modal */}
+    
     </CustomSafeArea>
   );
 };

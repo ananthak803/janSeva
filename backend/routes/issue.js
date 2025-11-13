@@ -3,6 +3,7 @@ import Issue from '../models/issue.js';
 import authMiddleware from '../services/checkAuth.js'; 
 import Resident from "../models/resident.js";
 import Comment from '../models/comment.js';
+import Vote from "../models/vote.js";
 const router = express.Router();
 
 router.post("/newIssue", authMiddleware, async (req, res) => {
@@ -95,9 +96,101 @@ router.post('/addComment',authMiddleware,async(req,res)=>{
     })
   }
   catch{
-
+    console.error(error);
+    res.status(500).json({msg:"An Error Occured"});
   }
 })
 
+
+router.post('/addVote', authMiddleware, async (req, res) => {
+  try {
+    const { issueId } = req.body;
+    const userId = req.user.id;
+    const existingVote = await Vote.findOne({ issueId, userId });
+    if (existingVote) {
+      return res.json({ msg: "User has already voted for this issue" });
+    }
+
+    const newVote = new Vote({ issueId, userId });
+    await newVote.save();
+
+    // Increment voteCount for the issue
+    const updatedIssue = await Issue.findByIdAndUpdate(
+      issueId,
+      { $inc: { voteCount: 1 } },
+      { new: true }
+    );
+
+    res.status(201).json({ msg: "Vote added", voteCount: updatedIssue.voteCount });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
+router.get("/comments/:issueId", authMiddleware, async (req, res) => {
+  const { issueId } = req.params;
+  try {
+    const comments = await Comment.find({ issueId })
+      .populate("commentedBy", "name") // populate with resident's name if needed
+      .sort({ createdAt: 1 }); // oldest first
+
+    // Format the response to include commenter name
+    const formattedComments = comments.map((c) => ({
+      _id: c._id,
+      text: c.text,
+      date: c.date,
+      time: c.time,
+      commentedByName: c.commentedBy?.name || "Anonymous",
+    }));
+
+    res.status(200).json(formattedComments);
+  } catch (error) {
+    console.error("Error fetching comments:", error);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
+// Route to add a new comment
+router.post("/addComment", authMiddleware, async (req, res) => {
+  try {
+    const { issueId, text } = req.body;
+    const commentedBy = req.user.id;
+
+    if (!issueId || !text) {
+      return res.status(400).json({ msg: "Missing issueId or text" });
+    }
+
+    const dateObj = new Date();
+    const date = dateObj.toISOString().split("T")[0]; // YYYY-MM-DD
+    const time = dateObj.toTimeString().split(" ")[0]; // HH:MM:SS
+
+    const newComment = new Comment({
+      issueId,
+      text,
+      commentedBy,
+      date,
+      time,
+    });
+
+    const savedComment = await newComment.save();
+
+    // Return saved comment with populated commenter name for convenience
+    const populatedComment = await savedComment
+      .populate("commentedBy", "name")
+      .execPopulate();
+
+    res.status(201).json({
+      _id: populatedComment._id,
+      text: populatedComment.text,
+      date: populatedComment.date,
+      time: populatedComment.time,
+      commentedByName: populatedComment.commentedBy?.name || "Anonymous",
+    });
+  } catch (error) {
+    console.error("Error adding comment:", error);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
 
 export default router;
