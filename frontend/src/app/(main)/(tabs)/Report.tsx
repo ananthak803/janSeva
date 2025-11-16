@@ -153,20 +153,24 @@ const Report = () => {
             />
 
             <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={category}
-                onValueChange={(itemValue) => setCategory(itemValue)}
-                style={styles.picker}
-                mode="dropdown"
-              >
-                <Picker.Item label="Select category" value="" />
-                <Picker.Item label="Roads" value="roads" />
-                <Picker.Item label="Water" value="water" />
-                <Picker.Item label="Power" value="power" />
-                <Picker.Item label="Sanitation" value="sanitation" />
-                <Picker.Item label="Others" value="others" />
-              </Picker>
-            </View>
+  <Picker
+    selectedValue={category}
+    onValueChange={(itemValue) => setCategory(itemValue)}
+    style={styles.picker}
+    mode="dropdown"
+  >
+    <Picker.Item label="Select Category" value="" />
+    <Picker.Item label="PWD" value="pwd" />
+    <Picker.Item label="Water" value="water" />
+    <Picker.Item label="Power" value="power" />
+    <Picker.Item label="Sanitation" value="sanitation" />
+    {/* <Picker.Item label="Health" value="health" />
+    <Picker.Item label="Health" value="health" />
+    <Picker.Item label="Health" value="health" /> */}
+    <Picker.Item label="Others" value="others" />
+  </Picker>
+</View>
+
 
             {imageUri ? (
               <View style={styles.uploads}>

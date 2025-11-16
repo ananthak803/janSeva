@@ -13,6 +13,16 @@ const issueSchema = new mongoose.Schema({
   imageUrl: { type: String, required: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Resident" },
   voteCount: { type: Number, default: 0 },
+  status: {
+  type: String,
+  enum: ["pending", "assigned","in-progress", "resolved"],
+  default: "pending",
+  },
+  assignedDepartment: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Department",
+    default:null
+  },
 }, { timestamps: true });
 
 issueSchema.index({ location: "2dsphere" }); // important for geo queries

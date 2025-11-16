@@ -9,9 +9,9 @@ const AuthHome = () => {
   return (
     <CustomSafeArea>
       <View style={styles.main}>
-        <Text>AuthHome</Text>
+        <Text style={{fontSize:25,marginBottom:15,fontWeight:700}}>JanSeva</Text>
         <DefaultButton name={'Resident'} onPress={()=>router.push('/ResidentAuth')} />
-        <DefaultButton name={'Municipal Staff'} onPress={()=>router.push('/MunicipalStaffAuth')}/>
+        {/* <DefaultButton name={'Municipal Staff'} onPress={()=>router.push('/MunicipalStaffAuth')}/> */}
       </View>
       
     </CustomSafeArea>
@@ -24,6 +24,7 @@ const styles=StyleSheet.create({
         // backgroundColor:'#1E90FF',
         padding:10,
         alignItems:"center",
+        justifyContent:"center"
     }
 })
 

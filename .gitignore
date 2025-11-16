@@ -5,3 +5,4 @@ web/node_modules/
 *.log
 .env
 .vscode
+sample.txt
