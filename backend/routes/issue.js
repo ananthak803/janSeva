@@ -63,7 +63,7 @@ router.get("/getIssue", authMiddleware, async (req, res) => {
     }
 
     const [longitude, latitude] = resident.location.coordinates;
-    const radius = 10; // radius in km
+    const radius = 20; // radius in km
 
     const issues = await Issue.find({
       location: {

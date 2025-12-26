@@ -8,7 +8,7 @@ const router = express.Router();
 router.get("/issues", authMiddleware, async (req, res) => {
   try {
     const issues = await Issue.find({})
-      .populate("assignedDepartment");  // <-- FIX
+      .populate("assignedDepartment"); 
 
     res.json({
       success: true,

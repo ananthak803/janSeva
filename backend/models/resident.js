@@ -18,6 +18,7 @@ const ResidentSchema = new mongoose.Schema({
     required:true,
     unique:true,
   },
+  
   password_hash: {
     type: String,
     required: true
