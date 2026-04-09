@@ -1,92 +1,66 @@
-import { Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View, StyleSheet } from "react-native";
 import React from "react";
+import { MaterialIcons } from "@expo/vector-icons";
 
-const IssueCard2 = ({ issueData}: any) => {
+const IssueCard2 = ({ issueData, onPress }: any) => {
+  const getTimeAgo = (createdAt: string) => {
+    if (!createdAt) return "";
+    const createdDate = new Date(createdAt);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - createdDate.getTime());
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays > 0) return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
+    if (diffHours > 0) return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
+    return `${diffMinutes} minute${diffMinutes !== 1 ? "s" : ""} ago`;
+  };
+
   return (
     <TouchableOpacity
-      activeOpacity={0.8}
-      style={{
-        minHeight: 100,
-        minWidth: "100%",
-        backgroundColor: "#f8f9fb",
-        borderRadius: 15,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        elevation: 3,
-        marginVertical: 6,
-        shadowColor: "#000",
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-        shadowOffset: { width: 0, height: 2 },
-      }}
+      activeOpacity={0.7}
+      style={styles.card}
+      onPress={onPress}
     >
-      {/* Top Row: Title + Status */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          marginBottom: 4,
-        }}
-      >
-        <Text
-          style={{
-            fontSize: 16,
-            fontWeight: "700",
-            flex: 1,
-            color: "#1a1a1a",
-          }}
-          numberOfLines={1}
-        >
+      <View style={styles.content}>
+        <Text style={styles.title} numberOfLines={1}>
           {issueData.title}
         </Text>
-        <View
-          style={{
-            backgroundColor:
-              issueData.status === "Resolved"
-                ? "#4CAF50"
-                :issueData.status === "Pending"
-                ? "#FFC107"
-                : "#0c92cbff",
-            paddingHorizontal: 10,
-            paddingVertical: 3,
-            borderRadius: 8,
-          }}
-        >
-          <Text
-            style={{
-              color: "#fff",
-              fontSize: 10,
-              fontWeight: "600",
-              textTransform: "uppercase",
-            }}
-          >
-            {issueData.status || "Pending"}
-          </Text>
-        </View>
+        <Text style={styles.timeText}>{getTimeAgo(issueData.createdAt)}</Text>
       </View>
-
-      <Text
-        style={{
-          fontSize: 13,
-          color: "#444",
-          fontWeight: "400",
-          marginBottom: 6,
-        }}
-        numberOfLines={3}
-      >
-        {issueData.description}
-      </Text>
-      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-        <Text style={{ fontSize: 11, color: "#555", fontWeight: "500" }}>
-           {issueData.date}
-        </Text>
-          <Text style={{ fontSize: 11, color: "#555", fontWeight: "500" }}>
-             {issueData.time}
-          </Text>
-      </View>
+      <MaterialIcons name="chevron-right" size={20} color="#ccc" />
     </TouchableOpacity>
   );
 };
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    marginBottom: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+  },
+  content: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1a1a1a",
+    marginBottom: 2,
+  },
+  timeText: {
+    fontSize: 12,
+    color: "#888",
+    fontWeight: "500",
+  },
+});
 
 export default IssueCard2;

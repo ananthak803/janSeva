@@ -61,9 +61,9 @@ const Capture = () => {
           <TouchableOpacity style={styles.backBtn} onPress={()=>router.back()}>
             <Text style={{color:"white"}}>Back</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={toggleFlash}>
+          {/* <TouchableOpacity onPress={toggleFlash}>
               <MaterialCommunityIcons name="flash" size={32} color="black" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         <View style={styles.lowerSection}>
@@ -78,7 +78,7 @@ const Capture = () => {
               <Entypo name="circle" size={40} color="black" />
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} >
+          <TouchableOpacity style={styles.button} onPress={()=>alert("this feature is not available.")} >
             <Text style={styles.text}>
               <MaterialCommunityIcons name="video" size={40} color="black" />
             </Text>

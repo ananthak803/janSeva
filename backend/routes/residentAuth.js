@@ -8,7 +8,7 @@ dotenv.config()
 const router = express.Router();
 
 router.post("/signup", async (req, res) => {
-  const { email,phone, password } = req.body;
+  const { name, email,phone, password } = req.body;
 
   try {
     let existingEmail = await Resident.findOne({ email });
@@ -18,6 +18,7 @@ router.post("/signup", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = new Resident({
+      name,
       email,
       phone,
       password_hash:hashedPassword
@@ -31,6 +32,17 @@ router.post("/signup", async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.send("Server error in routes/auth.js");
+  }
+});
+
+
+router.get("/me", authMiddleware, async (req, res) => {
+  try {
+    const user = await Resident.findById(req.user.id).select("-password_hash");
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error" });
   }
 });
 

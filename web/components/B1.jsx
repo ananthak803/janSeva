@@ -11,4 +11,4 @@ function B1({ label, onClick, color = 'blue' }) {
   )
 }
 
-export default B1
+export default B1;

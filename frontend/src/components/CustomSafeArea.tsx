@@ -1,8 +1,8 @@
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-const CustomSafeArea = ({children,edge=['left','right','top','bottom']}:any) => {
+const CustomSafeArea = ({children, edges=['left','right','top','bottom']}: any) => {
   return (
-    <SafeAreaView style={{flex:1} } edges={edge}>
+    <SafeAreaView style={{ flex: 1 }} edges={edges}>
         {children}
     </SafeAreaView>
   )

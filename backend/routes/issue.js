@@ -3,6 +3,7 @@ import Issue from '../models/issue.js';
 import authMiddleware from '../services/checkAuth.js';
 import Resident from "../models/resident.js";
 import Vote from "../models/vote.js";
+import Comment from "../models/comment.js";
 import Department from '../models/department.js';
 const router = express.Router();
 
@@ -117,6 +118,38 @@ router.post('/addVote', authMiddleware, async (req, res) => {
     );
 
     res.status(201).json({ msg: "Vote added", voteCount: updatedIssue.voteCount });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
+router.post('/addComment', authMiddleware, async (req, res) => {
+  try {
+    const { issueId, text } = req.body;
+    const userId = req.user.id;
+    const user = await Resident.findById(userId);
+
+    const newComment = new Comment({
+      issueId,
+      userId,
+      userName: user.email.split('@')[0], // Use email prefix as name for now
+      text
+    });
+    await newComment.save();
+
+    res.status(201).json(newComment);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
+router.get('/getComments/:issueId', authMiddleware, async (req, res) => {
+  try {
+    const { issueId } = req.params;
+    const comments = await Comment.find({ issueId }).sort({ createdAt: -1 });
+    res.json(comments);
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: "Server error" });
